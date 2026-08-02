@@ -359,10 +359,10 @@
           <thead>
             <tr>
               <th rowspan="2">Method</th>
-              <th colspan="3" class="grp">LongHealth</th>
-              <th colspan="3" class="grp">QuALITY</th>
               <th colspan="3" class="grp">RULER-4K</th>
               <th colspan="3" class="grp">QASPER</th>
+              <th colspan="3" class="grp">QuALITY</th>
+              <th colspan="3" class="grp">LongHealth</th>
             </tr>
             <tr>
               <th>0.2</th><th>0.1</th><th class="ge">0.05</th>
@@ -373,59 +373,59 @@
           </thead>
           <tbody>
             <tr><th>KVzip</th>
-              <td>71.5</td><td>70.0</td><td class="ge">61.0</td>
-              <td>66.0</td><td>58.5</td><td class="ge">46.3</td>
               <td>91.4</td><td>80.1</td><td class="ge">38.2</td>
-              <td>38.2</td><td>33.9</td><td>18.0</td></tr>
+              <td>38.2</td><td>33.9</td><td class="ge">18.0</td>
+              <td>66.0</td><td>58.5</td><td class="ge">46.3</td>
+              <td>71.5</td><td>70.0</td><td>61.0</td></tr>
             <tr class="ours"><th>+ RestoreKV</th>
-              <td><b>75.8</b><span class="dpos">+4.3</span></td><td><b>73.8</b><span class="dpos">+3.8</span></td><td class="ge"><b>67.5</b><span class="dpos">+6.5</span></td>
-              <td><b>67.0</b><span class="dpos">+1.0</span></td><td><b>63.3</b><span class="dpos">+4.8</span></td><td class="ge"><b>52.4</b><span class="dpos">+6.1</span></td>
               <td><b>93.5</b><span class="dpos">+2.1</span></td><td><b>88.8</b><span class="dpos">+8.7</span></td><td class="ge"><b>73.2</b><span class="dpos">+35.0</span></td>
-              <td><b>39.0</b><span class="dpos">+0.8</span></td><td><b>37.7</b><span class="dpos">+3.8</span></td><td><b>28.7</b><span class="dpos">+10.7</span></td></tr>
+              <td><b>39.0</b><span class="dpos">+0.8</span></td><td><b>37.7</b><span class="dpos">+3.8</span></td><td class="ge"><b>28.7</b><span class="dpos">+10.7</span></td>
+              <td><b>67.0</b><span class="dpos">+1.0</span></td><td><b>63.3</b><span class="dpos">+4.8</span></td><td class="ge"><b>52.4</b><span class="dpos">+6.1</span></td>
+              <td><b>75.8</b><span class="dpos">+4.3</span></td><td><b>73.8</b><span class="dpos">+3.8</span></td><td><b>67.5</b><span class="dpos">+6.5</span></td></tr>
 
             <tr><th>KVzip+</th>
-              <td>73.2</td><td>67.8</td><td class="ge">63.2</td>
-              <td>66.5</td><td>60.0</td><td class="ge">51.9</td>
               <td>91.3</td><td>84.8</td><td class="ge">51.6</td>
-              <td>38.1</td><td>32.4</td><td>23.3</td></tr>
+              <td>38.1</td><td>32.4</td><td class="ge">23.3</td>
+              <td>66.5</td><td>60.0</td><td class="ge">51.9</td>
+              <td>73.2</td><td>67.8</td><td>63.2</td></tr>
             <tr class="ours"><th>+ RestoreKV</th>
-              <td><b>74.2</b><span class="dpos">+1.0</span></td><td><b>73.0</b><span class="dpos">+5.2</span></td><td class="ge"><b>71.5</b><span class="dpos">+8.3</span></td>
-              <td><b>66.8</b><span class="dpos">+0.3</span></td><td><b>62.9</b><span class="dpos">+2.9</span></td><td class="ge"><b>57.9</b><span class="dpos">+6.0</span></td>
               <td><b>93.3</b><span class="dpos">+2.0</span></td><td><b>89.7</b><span class="dpos">+4.9</span></td><td class="ge"><b>70.7</b><span class="dpos">+19.1</span></td>
-              <td><b>40.9</b><span class="dpos">+2.8</span></td><td><b>38.5</b><span class="dpos">+6.1</span></td><td><b>31.6</b><span class="dpos">+8.3</span></td></tr>
+              <td><b>40.9</b><span class="dpos">+2.8</span></td><td><b>38.5</b><span class="dpos">+6.1</span></td><td class="ge"><b>31.6</b><span class="dpos">+8.3</span></td>
+              <td><b>66.8</b><span class="dpos">+0.3</span></td><td><b>62.9</b><span class="dpos">+2.9</span></td><td class="ge"><b>57.9</b><span class="dpos">+6.0</span></td>
+              <td><b>74.2</b><span class="dpos">+1.0</span></td><td><b>73.0</b><span class="dpos">+5.2</span></td><td><b>71.5</b><span class="dpos">+8.3</span></td></tr>
 
             <tr><th>ContrastKV</th>
-              <td>74.2</td><td>69.0</td><td class="ge">49.0</td>
-              <td>66.2</td><td>62.2</td><td class="ge">50.7</td>
               <td>91.6</td><td>80.7</td><td class="ge">38.0</td>
-              <td>40.1</td><td>31.9</td><td>17.8</td></tr>
+              <td>40.1</td><td>31.9</td><td class="ge">17.8</td>
+              <td>66.2</td><td>62.2</td><td class="ge">50.7</td>
+              <td>74.2</td><td>69.0</td><td>49.0</td></tr>
             <tr class="ours"><th>+ RestoreKV</th>
-              <td><b>75.2</b><span class="dpos">+1.0</span></td><td><b>70.5</b><span class="dpos">+1.5</span></td><td class="ge"><b>54.0</b><span class="dpos">+5.0</span></td>
-              <td><b>67.6</b><span class="dpos">+1.4</span></td><td><b>63.3</b><span class="dpos">+1.1</span></td><td class="ge"><b>51.9</b><span class="dpos">+1.2</span></td>
               <td><b>92.3</b><span class="dpos">+0.7</span></td><td><b>84.3</b><span class="dpos">+3.6</span></td><td class="ge"><b>40.2</b><span class="dpos">+2.2</span></td>
-              <td><b>40.9</b><span class="dpos">+0.8</span></td><td><b>36.0</b><span class="dpos">+4.1</span></td><td><b>21.6</b><span class="dpos">+3.8</span></td></tr>
+              <td><b>40.9</b><span class="dpos">+0.8</span></td><td><b>36.0</b><span class="dpos">+4.1</span></td><td class="ge"><b>21.6</b><span class="dpos">+3.8</span></td>
+              <td><b>67.6</b><span class="dpos">+1.4</span></td><td><b>63.3</b><span class="dpos">+1.1</span></td><td class="ge"><b>51.9</b><span class="dpos">+1.2</span></td>
+              <td><b>75.2</b><span class="dpos">+1.0</span></td><td><b>70.5</b><span class="dpos">+1.5</span></td><td><b>54.0</b><span class="dpos">+5.0</span></td></tr>
 
             <tr><th>SnapKV</th>
-              <td>41.0</td><td>36.8</td><td class="ge">36.2</td>
-              <td>53.9</td><td>53.0</td><td class="ge">42.5</td>
               <td>33.8</td><td>20.6</td><td class="ge">12.7</td>
-              <td>22.4</td><td>19.0</td><td>14.3</td></tr>
+              <td>22.4</td><td>19.0</td><td class="ge">14.3</td>
+              <td>53.9</td><td>53.0</td><td class="ge">42.5</td>
+              <td>41.0</td><td>36.8</td><td>36.2</td></tr>
             <tr class="ours"><th>+ RestoreKV</th>
-              <td><b>51.8</b><span class="dpos">+10.8</span></td><td><b>41.8</b><span class="dpos">+5.0</span></td><td class="ge"><b>38.5</b><span class="dpos">+2.3</span></td>
-              <td><b>59.4</b><span class="dpos">+5.5</span></td><td>51.8<span class="dneg">&minus;1.2</span></td><td class="ge"><b>49.9</b><span class="dpos">+7.4</span></td>
               <td><b>37.7</b><span class="dpos">+3.9</span></td><td><b>26.3</b><span class="dpos">+5.7</span></td><td class="ge"><b>14.3</b><span class="dpos">+1.6</span></td>
-              <td><b>29.9</b><span class="dpos">+7.5</span></td><td><b>24.0</b><span class="dpos">+5.0</span></td><td><b>20.7</b><span class="dpos">+6.4</span></td></tr>
+              <td><b>29.9</b><span class="dpos">+7.5</span></td><td><b>24.0</b><span class="dpos">+5.0</span></td><td class="ge"><b>20.7</b><span class="dpos">+6.4</span></td>
+              <td><b>59.4</b><span class="dpos">+5.5</span></td><td>51.8<span class="dneg">&minus;1.2</span></td><td class="ge"><b>49.9</b><span class="dpos">+7.4</span></td>
+              <td><b>51.8</b><span class="dpos">+10.8</span></td><td><b>41.8</b><span class="dpos">+5.0</span></td><td><b>38.5</b><span class="dpos">+2.3</span></td></tr>
 
             <tr><th>H<sub>2</sub>O</th>
-              <td>60.2</td><td>48.8</td><td class="ge">37.0</td>
-              <td>59.2</td><td>50.4</td><td class="ge">41.5</td>
               <td>8.0</td><td>3.5</td><td class="ge">3.2</td>
-              <td>22.0</td><td>13.8</td><td>14.4</td></tr>
+              <td>22.0</td><td>13.8</td><td class="ge">14.4</td>
+              <td>59.2</td><td>50.4</td><td class="ge">41.5</td>
+              <td>60.2</td><td>48.8</td><td>37.0</td></tr>
             <tr class="ours"><th>+ RestoreKV</th>
-              <td><b>64.8</b><span class="dpos">+4.6</span></td><td><b>59.0</b><span class="dpos">+10.2</span></td><td class="ge"><b>46.8</b><span class="dpos">+9.8</span></td>
-              <td><b>60.9</b><span class="dpos">+1.7</span></td><td><b>54.9</b><span class="dpos">+4.5</span></td><td class="ge"><b>47.7</b><span class="dpos">+6.2</span></td>
               <td><b>17.3</b><span class="dpos">+9.3</span></td><td><b>11.6</b><span class="dpos">+8.1</span></td><td class="ge"><b>5.7</b><span class="dpos">+2.5</span></td>
-              <td><b>30.4</b><span class="dpos">+8.4</span></td><td><b>24.7</b><span class="dpos">+10.9</span></td><td><b>21.3</b><span class="dpos">+6.9</span></td></tr>
+              <td><b>30.4</b><span class="dpos">+8.4</span></td><td><b>24.7</b><span class="dpos">+10.9</span></td><td class="ge"><b>21.3</b><span class="dpos">+6.9</span></td>
+              <td><b>60.9</b><span class="dpos">+1.7</span></td><td><b>54.9</b><span class="dpos">+4.5</span></td><td class="ge"><b>47.7</b><span class="dpos">+6.2</span></td>
+              <td><b>64.8</b><span class="dpos">+4.6</span></td><td><b>59.0</b><span class="dpos">+10.2</span></td><td><b>46.8</b><span class="dpos">+9.8</span></td></tr>
           </tbody>
         </table>
       </div>
