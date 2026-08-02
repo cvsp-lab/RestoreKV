@@ -248,7 +248,8 @@
         <p>Existing query-agnostic KV eviction only decides <b>which</b> original KV pairs to keep. RestoreKV adds a
           learned, budget-matched <b>restoration</b>: a single LoRA-adapted restore pass generates a compact,
           context-conditioned <b>restore cache</b> — recovering full-cache behavior under aggressive eviction while
-          training only <b>0.4%</b> of parameters and adding <b>&lt;0.5%</b> one-time overhead.</p>
+          training only <b>0.4%</b> of parameters (<b>~2h</b> on a single RTX PRO 6000) and adding <b>&lt;0.5%</b>
+          one-time overhead.</p>
       </div>
 
       <div style="max-width: 860px; margin: 44px auto 0;">
