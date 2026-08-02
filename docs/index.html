@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RestoreKV: Recovering Full-Cache Behavior Under Aggressive Query-Agnostic KV Cache Eviction</title>
+  <meta name="description"
+    content="RestoreKV complements selection-based query-agnostic KV cache eviction with a learned, budget-matched restoration pass. A single LoRA-adapted restore pass generates a compact, context-conditioned restore cache — recovering full-cache behavior under aggressive compression at negligible one-time cost.">
+  <meta name="keywords" content="KV cache eviction, KV cache compression, long-context LLM, query-agnostic compression, LoRA, self-distillation">
+  <meta name="author" content="Changwoo Baek, Seungjun Shin, Kyeongbo Kong">
+  <meta name="robots" content="index, follow">
+  <meta property="og:title" content="RestoreKV">
+  <meta property="og:description" content="Recovering full-cache behavior under aggressive query-agnostic KV cache eviction via a learned, budget-matched restore pass.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="static/images/teaser.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Varela+Round&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <style>
+    :root {
+      --primary: #000; --secondary: #333; --accent: #2f6fe0; --accent-bg: #eef4fd;
+      --text: #2d3748; --light-text: #4a5568; --bg: #ffffff; --light-bg: #f7fafc;
+      --surface: #ffffff; --border: #e2e8f0;
+      --shadow: 0 5px 15px rgba(0,0,0,0.1), 0 5px 20px rgba(0,0,0,0.05); --radius: 14px;
+      --pos: #1f9d55; --neg: #c8283c;
+    }
+    html[data-theme="dark"] {
+      --primary: #f4f6fa; --secondary: #c2c8d2; --accent: #5b9bf6; --accent-bg: rgba(91,155,246,0.12);
+      --text: #d8dce4; --light-text: #9aa2b0; --bg: #0f1115; --light-bg: #161a21;
+      --surface: #1a1f29; --border: #2a3039; --shadow: 0 6px 20px rgba(0,0,0,0.55);
+      --pos: #46c47c; --neg: #f0748a;
+    }
+    html[data-theme="dark"] .site-header { background: rgba(15,17,21,0.92);
+      border-bottom: 1px solid #232833; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
+    .nav-toggle { background: none; border: none; cursor: pointer; color: var(--primary);
+      font-size: 1rem; font-weight: 600; padding: 0; font-family: inherit; line-height: 1; }
+    .nav-toggle:hover { color: var(--accent); }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+      font-family: 'Open Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.7; }
+    h1, h2, h3 { font-family: 'Varela Round', sans-serif; color: var(--primary); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .container { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 22px; }
+    .brand-accent { color: #1e3a8a; }
+    html[data-theme="dark"] .brand-accent { color: #a9bdf0; }
+
+    /* header */
+    .site-header { position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      background: rgba(255,255,255,0.95); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 12px 0; }
+    .site-header .container { max-width: 1500px; }
+    .main-nav { display: flex; justify-content: center; }
+    .nav-links { display: flex; list-style: none; margin: 0; padding: 0; flex-wrap: wrap; justify-content: center; align-items: center; }
+    .nav-links li { margin: 0 24px; }
+    .nav-links a { color: var(--primary); font-size: 0.98rem; font-weight: 600; transition: color .2s; }
+    .nav-links a:hover { color: var(--accent); text-decoration: none; }
+    @media (max-width: 760px){ .nav-links li { margin: 0 10px; } .nav-links a, .nav-dropdown .dd-trigger { font-size: 0.82rem; } }
+
+    /* nav dropdown */
+    .nav-dropdown { position: relative; }
+    .dd-trigger { cursor: pointer; color: var(--primary); font-weight: 600; font-size: 0.98rem;
+      display: inline-flex; align-items: center; gap: 6px; transition: color .2s; user-select: none; }
+    .dd-trigger:hover, .nav-dropdown.open .dd-trigger { color: var(--accent); }
+    .dd-caret { font-size: 0.7em; transition: transform .2s; }
+    .nav-dropdown:hover .dd-caret, .nav-dropdown.open .dd-caret { transform: rotate(180deg); }
+    .dropdown-menu { position: absolute; top: 100%; left: 50%; margin: 0; padding: 6px; list-style: none;
+      min-width: 190px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      box-shadow: var(--shadow); opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(-6px);
+      transition: opacity .15s ease, transform .15s ease; z-index: 1001; }
+    .dropdown-menu::before { content: ''; position: absolute; top: -12px; left: 0; right: 0; height: 12px; }
+    .nav-dropdown:hover .dropdown-menu, .nav-dropdown.open .dropdown-menu {
+      opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    .dropdown-menu li { margin: 0; }
+    .dropdown-menu a { display: block; padding: 9px 14px; border-radius: 7px; color: var(--text);
+      font-size: 0.92rem; font-weight: 600; white-space: nowrap; }
+    .dropdown-menu a:hover { background: var(--light-bg); color: var(--accent); text-decoration: none; }
+    .dd-venue { color: var(--light-text); font-weight: 500; font-size: 0.82em; margin-left: 4px; }
+
+    /* hero */
+    .hero-section { padding: 110px 0 20px; background: var(--bg); text-align: center; }
+    .hero-section .title { font-family: 'Open Sans', sans-serif; font-size: clamp(1.8rem, 4vw, 2.7rem);
+      font-weight: 600; line-height: 1.28; margin: 0 auto 10px; max-width: 980px; }
+    .hero-section .subtitle { font-size: 1.4rem; font-weight: 600; color: #1e3a8a; margin: 0 0 18px;
+      letter-spacing: 0.02em; }
+    html[data-theme="dark"] .hero-section .subtitle { color: #a9bdf0; }
+    .author-line { margin: 14px 0 4px; }
+    .author-line a { color: var(--primary); font-size: 1.25rem; font-weight: 600; }
+    .author-line a:hover { color: var(--accent); text-decoration: none; }
+    .affil { color: var(--light-text); font-size: 1.05rem; margin-top: 10px; }
+    .affil .email { font-size: 0.88rem; color: #94a0b8; }
+
+    /* pill buttons */
+    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 2.2rem; }
+    .btn { display: inline-flex; align-items: center; gap: 9px; padding: 11px 24px; border-radius: 999px;
+      font-weight: 600; font-size: 1rem; transition: transform .15s, background .2s, box-shadow .15s; }
+    .btn:hover { text-decoration: none; transform: translateY(-2px); }
+    .btn-dark { background: #363636; color: #fff; box-shadow: var(--shadow); }
+    .btn-dark:hover { background: var(--accent); }
+    .btn-disabled { background: #363636; color: #fff; opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+    .hint { margin-top: 12px; color: #9aa0b2; font-size: 0.82rem; }
+
+    /* sections */
+    .section { padding: 60px 0; }
+    .section.alt { background: var(--light-bg); }
+    .section h2 { position: relative; display: inline-block; text-align: left;
+      font-size: clamp(1.7rem, 3.4vw, 2.1rem); margin: 0 0 2.2rem; }
+    .section h2::after { content: ''; position: absolute; left: 0; bottom: -10px; width: 50px; height: 4px;
+      background: var(--accent); border-radius: 2px; }
+    .lead { text-align: left; color: var(--light-text); max-width: 860px; margin: 0; font-size: 1.08rem; }
+    .prose { font-size: 1.05rem; color: var(--text); }
+
+    /* TL;DR */
+    .tldr { background: var(--accent-bg); border: 1px solid var(--border); border-left: 5px solid var(--accent);
+      border-radius: 12px; padding: 20px 24px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+    .tldr .tag { background: var(--accent); color: #fff; font-family: 'Varela Round'; font-weight: 700;
+      padding: 5px 16px; border-radius: 9px; flex-shrink: 0; }
+    .tldr p { flex: 1; min-width: 260px; margin: 0; font-size: 1.16rem; color: var(--text); }
+    .tldr b { color: var(--accent); }
+
+    /* stat band */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 34px; }
+    @media (max-width: 820px){ .stats { grid-template-columns: repeat(2, 1fr); } }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 20px 18px; text-align: center; }
+    .stat .n { font-family: 'Varela Round'; font-size: 2rem; color: var(--accent); line-height: 1; }
+    .stat .l { color: var(--light-text); font-size: 0.92rem; margin-top: 8px; }
+
+    /* cards / figures */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px 30px; }
+    figure.fig { margin: 26px 0 0; text-align: center; }
+    .frame { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 16px; display: inline-block; max-width: 100%; cursor: zoom-in; transition: transform .2s; }
+    .frame:hover { transform: translateY(-2px); }
+    .frame img { display: block; width: 100%; border-radius: 8px; }
+    figcaption { color: var(--light-text); font-size: 1rem; margin: 14px auto 0; max-width: 940px; text-align: justify; }
+    figcaption b { color: var(--primary); }
+
+    /* contributions */
+    .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+    @media (max-width: 820px){ .grid3 { grid-template-columns: 1fr; } }
+    .feat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+    .feat .ic { width: 50px; height: 50px; border-radius: 12px; display: grid; place-items: center; color: #fff;
+      font-size: 1.3rem; background: linear-gradient(135deg, #2f6fe0, #06c29c); margin-bottom: 14px; }
+    .feat h3 { margin: 0 0 8px; font-size: 1.22rem; }
+    .feat p { margin: 0; color: var(--light-text); font-size: 1.0rem; }
+
+    /* results table */
+    .table-wrap { overflow-x: auto; margin-top: 26px; border-radius: var(--radius); box-shadow: var(--shadow);
+      border: 1px solid var(--border); }
+    table.res { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); font-size: 0.98rem; }
+    table.res th, table.res td { padding: 11px 14px; text-align: center; border-bottom: 1px solid var(--border); }
+    table.res thead th { font-family: 'Varela Round'; color: var(--primary); background: var(--light-bg); font-weight: 400; }
+    table.res tbody th { text-align: left; font-family: inherit; font-weight: 600; color: var(--text); white-space: nowrap; }
+    table.res tr.ours { background: var(--accent-bg); }
+    table.res tr.ours th { color: var(--accent); }
+    table.res td b { color: var(--primary); }
+    .dpos { color: var(--pos); font-size: 0.78em; font-weight: 700; margin-left: 3px; }
+    .dneg { color: var(--neg); font-size: 0.78em; font-weight: 700; margin-left: 3px; }
+    .tnote { color: var(--light-text); font-size: 0.92rem; margin-top: 12px; text-align: left; }
+
+    /* footer */
+    footer { padding: 40px 0; border-top: 1px solid var(--border); text-align: center; color: var(--light-text); font-size: 0.9rem; }
+    footer a { color: var(--light-text); text-decoration: underline; }
+
+    /* lightbox */
+    .lb { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 10000; cursor: zoom-out; }
+    .lb.active { display: flex; }
+    .lb img { max-width: 95vw; max-height: 95vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+    body.no-scroll { overflow: hidden; }
+
+    .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s, transform .6s; }
+    .reveal.in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce){ .reveal { opacity: 1; transform: none; } html { scroll-behavior: auto; } }
+  </style>
+</head>
+
+<body>
+  <header class="site-header">
+    <div class="container">
+      <nav class="main-nav">
+        <ul class="nav-links">
+          <li><a href="#top">RestoreKV</a></li>
+          <li><a href="#abstract">Abstract</a></li>
+          <li><a href="#method">Method</a></li>
+          <li><a href="#results">Results</a></li>
+          <li><a href="#analysis">Analysis</a></li>
+          <li><a href="#efficiency">Efficiency</a></li>
+          <li class="nav-dropdown">
+            <span class="dd-trigger" tabindex="0">Other Efficient AI <i class="fas fa-chevron-down dd-caret"></i></span>
+            <ul class="dropdown-menu">
+              <li><a href="https://higokri.github.io/HybridKV/" target="_blank">HybridKV <span class="dd-venue">ICMLw'26</span></a></li>
+              <li><a href="https://paper.pnu-cvsp.com/3DZip/" target="_blank">3DZip <span class="dd-venue">ECCV'26</span></a></li>
+              <li><a href="https://paper.pnu-cvsp.com/AgilePruner/" target="_blank">AgilePruner <span class="dd-venue">ICLR'26</span></a></li>
+              <li><a href="https://higokri.github.io/BTS/" target="_blank">BTS Series <span class="dd-venue">Hub</span></a></li>
+            </ul>
+          </li>
+          <li><button id="theme-toggle" class="nav-toggle" aria-label="Toggle dark mode"><i class="fas fa-moon"></i></button></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero-section" id="top">
+    <div class="container">
+      <h1 class="title"><span class="brand-accent">RestoreKV</span>: Recovering Full-Cache Behavior Under Aggressive Query-Agnostic KV Cache Eviction</h1>
+      <div class="subtitle">Preprint</div>
+
+      <div class="author-line">
+        <a href="https://sites.google.com/view/changwoobaek00/%ED%99%88" target="_blank">Changwoo Baek</a><sup>1</sup>
+        &nbsp;&middot;&nbsp;
+        <a href="#" target="_blank">Seungjun Shin</a><sup>2</sup><sup>&dagger;</sup>
+        &nbsp;&middot;&nbsp;
+        <a href="https://www.pnu-cvsp.com/prof" target="_blank">Kyeongbo Kong</a><sup>1</sup><sup>&dagger;</sup>
+      </div>
+      <div class="affil">
+        <sup>1</sup>Pusan National University &nbsp;&middot;&nbsp; <sup>2</sup>Sookmyung Women's University<br>
+        <span class="email">{higok18, kbkong}@pusan.ac.kr &middot; seungjun@sookmyung.ac.kr &middot; <sup>&dagger;</sup>Corresponding authors</span>
+      </div>
+
+      <div class="cta">
+        <a class="btn btn-disabled"><i class="fas fa-file-lines"></i> Paper (Coming soon)</a>
+      </div>
+
+      <figure class="fig reveal" style="max-width: 900px; margin: 30px auto 0;">
+        <div class="frame"><img class="zoomable" src="static/images/teaser.png" alt="RestoreKV narrows the gap to full-cache behavior under aggressive compression"></div>
+        <figcaption><b>RestoreKV narrows the gap to full-cache behavior under aggressive compression at negligible
+          one-time cost.</b> Applied to KVzip+, RestoreKV reaches <b>86.4</b> RULER accuracy at <b>16&times;</b>
+          compression on the KVPress Benchmark, while adding negligible compression-time overhead.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ABSTRACT -->
+  <section class="section" id="abstract">
+    <div class="container">
+      <div class="tldr reveal">
+        <span class="tag">TL;DR</span>
+        <p>Existing query-agnostic KV eviction only decides <b>which</b> original KV pairs to keep. RestoreKV adds a
+          learned, budget-matched <b>restoration</b>: a single LoRA-adapted restore pass generates a compact,
+          context-conditioned <b>restore cache</b> — recovering full-cache behavior under aggressive eviction while
+          training only <b>0.4%</b> of parameters and adding <b>&lt;0.5%</b> one-time overhead.</p>
+      </div>
+
+      <div class="stats reveal">
+        <div class="stat"><div class="n">38.2&rarr;73.2</div><div class="l">KVzip on RULER-4K @ 5% budget (Qwen3-4B)</div></div>
+        <div class="stat"><div class="n">59/60</div><div class="l">budget-matched settings improved</div></div>
+        <div class="stat"><div class="n">0.4%</div><div class="l">trainable parameters (LoRA + restore tokens)</div></div>
+        <div class="stat"><div class="n">&lt;0.5%</div><div class="l">added compression-time overhead</div></div>
+      </div>
+
+      <div style="max-width: 860px; margin: 44px auto 0;">
+        <h2 class="reveal">Abstract</h2>
+        <div class="prose reveal" style="text-align: justify;">
+          Query-agnostic KV cache eviction compresses a context once and reuses the resulting cache for arbitrary future
+          queries, but performance can collapse under tight budgets. Existing methods primarily improve <i>which</i>
+          original KV pairs are retained. We introduce <b>RestoreKV</b>, which complements this selection-based
+          formulation with <b>learned restoration</b> under the same total KV budget. Our key insight is that, although
+          the information lost through eviction is context-specific, the <i>mechanism</i> for generating its compact
+          complement can be <b>shared across contexts</b>. After context prefill, a few restore tokens attend to the full
+          KV cache in a single LoRA-adapted pass, generating a compact, context-conditioned restore cache. The base
+          importance scorer and eviction rule remain unchanged, and the adapters are disabled for all subsequent queries
+          and decoding. RestoreKV is trained through parameter-efficient <b>self-distillation</b> from the frozen
+          full-cache model, optimizing only 0.4% of the parameters and requiring no task-specific tuning. Across four
+          backbones and four long-context benchmarks, RestoreKV substantially reduces compression-induced degradation:
+          on Qwen3-4B it improves 59 of 60 paired, budget-matched settings across five base eviction methods; at a 5%
+          budget it raises KVzip from 38.2 to 73.2 on RULER-4K. Applied to KVzip+, RestoreKV reaches 86.4 RULER accuracy
+          at 16&times; compression on the KVPress Benchmark, while adding less than 0.5% one-time cache-construction
+          overhead in a 32K-context evaluation.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTRIBUTIONS -->
+  <section class="section alt">
+    <div class="container">
+      <h2 class="reveal">Contributions</h2>
+      <div class="grid3">
+        <div class="feat reveal">
+          <div class="ic"><i class="fas fa-wand-magic-sparkles"></i></div>
+          <h3>A restoration perspective</h3>
+          <p>Instead of learning only which original KV pairs to retain, we learn a shared mechanism that generates a
+            compact, context-conditioned restore cache to complement the retained context cache.</p>
+        </div>
+        <div class="feat reveal">
+          <div class="ic"><i class="fas fa-plug"></i></div>
+          <h3>A budget-matched plug-in</h3>
+          <p>RestoreKV is a single-pass plug-in that preserves the base importance scorer and eviction rule. Its LoRA
+            adapters act only during restore-cache generation, leaving query processing and decoding unchanged.</p>
+        </div>
+        <div class="feat reveal">
+          <div class="ic"><i class="fas fa-chart-line"></i></div>
+          <h3>Consistent recovery</h3>
+          <p>Improvements across five eviction methods, four backbones, and four long-context benchmarks — and analysis
+            showing that attention-side adaptation is the primary source of recovery under aggressive eviction.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="section" id="method">
+    <div class="container">
+      <h2 class="reveal">How RestoreKV works</h2>
+      <p class="lead reveal">A single LoRA-adapted restore pass, trained offline by self-distillation, generates a compact
+        restore cache that is merged with the retained context under the same total KV budget.</p>
+      <figure class="fig reveal">
+        <div class="frame"><img class="zoomable" src="static/images/overview.png" alt="Overview of RestoreKV"></div>
+        <figcaption><b>Overview of RestoreKV.</b> After context prefill, a single LoRA-adapted restore pass processes
+          <i>n</i> restore tokens (<i>n</i>&nbsp;=&nbsp;8 by default) with causal access to the full KV cache, generating
+          context-conditioned KV pairs. These restore states are combined with the retained context states under the
+          <b>same total KV budget</b>. LoRA is active <i>only</i> during restore-cache generation; subsequent query
+          processing and decoding use the original frozen backbone. <b>Training (offline):</b> the restore-token
+          embeddings and LoRA adapters (0.4% of a 4B backbone) are optimized by self-distillation from the frozen
+          full-cache teacher.</figcaption>
+      </figure>
+
+      <div class="card prose reveal" style="margin-top: 30px; text-align: justify; max-width: 940px;">
+        <b>1) Restore-cache generation with LoRA.</b> After the context is prefilled and the base method evicts KV pairs,
+        a few learnable <i>restore tokens</i> attend to the full KV cache in a single LoRA-adapted forward pass, producing
+        a small, context-conditioned restore cache that is concatenated with the retained pairs — all within the same
+        total budget.<br><br>
+        <b>2) Self-distillation from the full cache.</b> Only the restore-token embeddings and lightweight LoRA adapters
+        are trained; the backbone and base evictor stay frozen. For the same context and query, the student using the
+        budget-matched cache is optimized to match the frozen full-cache teacher's answer-token distributions — no
+        task-specific tuning.<br><br>
+        <b>3) Inference.</b> The restore cache is built <i>once</i> per new context. Adapters are then disabled, so every
+        subsequent query and all decoding run on the original frozen model at the base method's query-time KV budget and
+        cost. Component ablations show the gain comes primarily from <b>attention-side adaptation</b> (learned LoRA on
+        q/k/v) rather than information memorized in the restore embeddings.
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="section alt" id="results">
+    <div class="container">
+      <h2 class="reveal">Consistent gains across backbones &amp; benchmarks</h2>
+      <figure class="fig reveal">
+        <div class="frame"><img class="zoomable" src="static/images/results.png" alt="Performance across four model backbones and four benchmarks"></div>
+        <figcaption><b>Performance across four model backbones and four benchmarks.</b> RestoreKV and RestoreKV+ are
+          applied to KVzip and KVzip+ under the same KV budget. Both reduce compression-induced performance loss, with
+          <b>larger gains under tighter cache budgets</b>.</figcaption>
+      </figure>
+
+      <h3 class="reveal" style="margin: 46px 0 0; font-size: 1.25rem;">Generalization across eviction methods — RULER-4K (Qwen3-4B)</h3>
+      <div class="table-wrap reveal">
+        <table class="res">
+          <thead>
+            <tr><th>Method</th><th>r = 0.2</th><th>r = 0.1</th><th>r = 0.05</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>KVzip</th><td>91.4</td><td>80.1</td><td>38.2</td></tr>
+            <tr class="ours"><th>+ RestoreKV</th><td><b>93.5</b><span class="dpos">+2.1</span></td><td><b>88.8</b><span class="dpos">+8.7</span></td><td><b>73.2</b><span class="dpos">+35.0</span></td></tr>
+            <tr><th>KVzip+</th><td>91.3</td><td>84.8</td><td>51.6</td></tr>
+            <tr class="ours"><th>+ RestoreKV</th><td><b>93.3</b><span class="dpos">+2.0</span></td><td><b>89.7</b><span class="dpos">+4.9</span></td><td><b>70.7</b><span class="dpos">+19.1</span></td></tr>
+            <tr><th>ContrastKV</th><td>91.6</td><td>80.7</td><td>38.0</td></tr>
+            <tr class="ours"><th>+ RestoreKV</th><td><b>92.3</b><span class="dpos">+0.7</span></td><td><b>84.3</b><span class="dpos">+3.6</span></td><td><b>40.2</b><span class="dpos">+2.2</span></td></tr>
+            <tr><th>SnapKV</th><td>33.8</td><td>20.6</td><td>12.7</td></tr>
+            <tr class="ours"><th>+ RestoreKV</th><td><b>37.7</b><span class="dpos">+3.9</span></td><td><b>26.3</b><span class="dpos">+5.7</span></td><td><b>14.3</b><span class="dpos">+1.6</span></td></tr>
+            <tr><th>H<sub>2</sub>O</th><td>8.0</td><td>3.5</td><td>3.2</td></tr>
+            <tr class="ours"><th>+ RestoreKV</th><td><b>17.3</b><span class="dpos">+9.3</span></td><td><b>11.6</b><span class="dpos">+8.1</span></td><td><b>5.7</b><span class="dpos">+2.5</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="tnote"><i>r</i> is the KV budget ratio (fraction of the full cache retained). RestoreKV is a budget-matched
+        plug-in — base and <b>+ RestoreKV</b> use the same total budget. Gains are largest at the tightest budget
+        (<i>r</i>&nbsp;=&nbsp;0.05). Full results over LongHealth, QuALITY and QASPER are in the paper.</p>
+    </div>
+  </section>
+
+  <!-- ANALYSIS -->
+  <section class="section" id="analysis">
+    <div class="container">
+      <h2 class="reveal">What the restore pass recovers</h2>
+      <figure class="fig reveal">
+        <div class="frame"><img class="zoomable" src="static/images/analysis.png" alt="Layer-wise context-attention recovery"></div>
+        <figcaption><b>Layer-wise context-attention recovery on RULER-4K (Qwen3-4B, <i>r</i>&nbsp;=&nbsp;0.05).</b> KVzip
+          substantially suppresses attention from the final query token to non-sink context KV pairs. RestoreKV recovers
+          part of the lost attention (shaded), raising the average context-attention mass from <b>0.56%</b> to
+          <b>1.30%</b> and reducing KL divergence from the full-cache model by <b>16%</b> (0.198&nbsp;&rarr;&nbsp;0.167).</figcaption>
+      </figure>
+      <figure class="fig reveal">
+        <div class="frame"><img class="zoomable" src="static/images/compare.png" alt="Comparison with a synthesized-cache baseline"></div>
+        <figcaption><b>Comparison with a synthesized-cache baseline (Qwen3-4B).</b> RestoreKV+ consistently improves
+          token-eviction baselines and stays competitive with AM-fast, a strong synthesized-cache method, at
+          <b>~13&times; lower compression time</b> on 4K-token contexts.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- EFFICIENCY -->
+  <section class="section alt" id="efficiency">
+    <div class="container">
+      <h2 class="reveal">Negligible one-time cost</h2>
+      <figure class="fig reveal">
+        <div class="frame"><img class="zoomable" src="static/images/efficiency.png" alt="Efficiency analysis"></div>
+        <figcaption><b>Efficiency analysis (Llama-3.1-8B-Instruct, 32K context).</b> (a) Restore-cache generation adds
+          only ~0.04&nbsp;s (<b>0.5%</b>) and 84&nbsp;MB (<b>0.4%</b>) on top of any base scorer. (b) Attention latency
+          and KV memory are nearly identical to the base method — the query-time budget and decoding cost are unchanged.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p style="margin: 0 0 8px;"><b>RestoreKV</b> · Pusan National University &middot; Sookmyung Women's University</p>
+      <p style="margin: 0;">Part of the <a href="https://higokri.github.io/BTS/" target="_blank">BTS — Busan Token-pruning Series</a>.
+        Page design inspired by <a href="https://cvlab-kaist.github.io/WorldKV/" target="_blank">WorldKV</a>. Licensed under
+        <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.</p>
+    </div>
+  </footer>
+
+  <div class="lb" id="lb"><img alt=""></div>
+
+  <script>
+    // theme toggle
+    (function () {
+      const root = document.documentElement, btn = document.getElementById('theme-toggle');
+      const set = (t) => { root.dataset.theme = t; if (btn) btn.innerHTML = t === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>'; };
+      set(localStorage.getItem('theme') || 'light');
+      if (btn) btn.addEventListener('click', () => { const t = root.dataset.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem('theme', t); set(t); });
+    })();
+    // nav dropdown
+    (function () {
+      const dd = document.querySelector('.nav-dropdown'); const trg = dd && dd.querySelector('.dd-trigger');
+      if (!dd || !trg) return;
+      trg.addEventListener('click', (e) => { e.stopPropagation(); dd.classList.toggle('open'); });
+      trg.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dd.classList.toggle('open'); } });
+      document.addEventListener('click', () => dd.classList.remove('open'));
+    })();
+    // reveal
+    const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    // lightbox
+    (function () {
+      const lb = document.getElementById('lb'), lbImg = lb.querySelector('img');
+      document.querySelectorAll('img.zoomable').forEach(img => img.addEventListener('click', () => {
+        lbImg.src = img.src; lb.classList.add('active'); document.body.classList.add('no-scroll'); }));
+      const close = () => { lb.classList.remove('active'); document.body.classList.remove('no-scroll'); };
+      lb.addEventListener('click', close);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+    })();
+  </script>
+</body>
+</html>
