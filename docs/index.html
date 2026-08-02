@@ -325,7 +325,8 @@
           full-cache teacher.</figcaption>
       </figure>
 
-      <div class="card prose reveal" style="margin-top: 30px; text-align: justify; max-width: 940px;">
+      <div class="card prose reveal" style="margin: 30px auto 0; text-align: justify; max-width: 940px;">
+        <h3 style="margin: 0 0 16px; text-align: center; font-size: 1.4rem;">Method</h3>
         <b>1) Restore-cache generation with LoRA.</b> After the context is prefilled and the base method evicts KV pairs,
         a few learnable <i>restore tokens</i> attend to the full KV cache in a single LoRA-adapted forward pass, producing
         a small, context-conditioned restore cache that is concatenated with the retained pairs — all within the same
@@ -446,12 +447,6 @@
           substantially suppresses attention from the final query token to non-sink context KV pairs. RestoreKV recovers
           part of the lost attention (shaded), raising the average context-attention mass from <b>0.56%</b> to
           <b>1.30%</b> and reducing KL divergence from the full-cache model by <b>16%</b> (0.198&nbsp;&rarr;&nbsp;0.167).</figcaption>
-      </figure>
-      <figure class="fig reveal">
-        <div class="frame"><img class="zoomable" src="static/images/compare.png" alt="Comparison with a synthesized-cache baseline"></div>
-        <figcaption><b>Comparison with a synthesized-cache baseline (Qwen3-4B).</b> RestoreKV+ consistently improves
-          token-eviction baselines and stays competitive with AM-fast, a strong synthesized-cache method, at
-          <b>~13&times; lower compression time</b> on 4K-token contexts.</figcaption>
       </figure>
     </div>
   </section>
