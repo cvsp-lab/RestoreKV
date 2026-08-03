@@ -283,33 +283,6 @@
     </div>
   </section>
 
-  <!-- CONTRIBUTIONS -->
-  <section class="section alt">
-    <div class="container">
-      <h2 class="reveal">Contributions</h2>
-      <div class="grid3">
-        <div class="feat reveal">
-          <div class="ic"><i class="fas fa-wand-magic-sparkles"></i></div>
-          <h3>A restoration perspective</h3>
-          <p>Instead of learning only which original KV pairs to retain, we learn a shared mechanism that generates a
-            compact, context-conditioned restore cache to complement the retained context cache.</p>
-        </div>
-        <div class="feat reveal">
-          <div class="ic"><i class="fas fa-plug"></i></div>
-          <h3>A budget-matched plug-in</h3>
-          <p>RestoreKV is a single-pass plug-in that preserves the base importance scorer and eviction rule. Its LoRA
-            adapters act only during restore-cache generation, leaving query processing and decoding unchanged.</p>
-        </div>
-        <div class="feat reveal">
-          <div class="ic"><i class="fas fa-chart-line"></i></div>
-          <h3>Consistent recovery</h3>
-          <p>Improvements across five eviction methods, four backbones, and four long-context benchmarks — and analysis
-            showing that attention-side adaptation is the primary source of recovery under aggressive eviction.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- METHOD -->
   <section class="section" id="method">
     <div class="container">
