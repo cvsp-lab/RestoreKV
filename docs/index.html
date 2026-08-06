@@ -98,7 +98,9 @@
     .affil .email { font-size: 0.88rem; color: #94a0b8; }
 
     /* pill buttons */
-    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 2.2rem; }
+    .lead-award { text-align: center; margin: 2rem 0 0; font-size: 1.08rem; color: var(--text); }
+    .lead-award b { color: #e58e26; }
+    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 1rem; }
     .btn { display: inline-flex; align-items: center; gap: 9px; padding: 11px 24px; border-radius: 999px;
       font-weight: 600; font-size: 1rem; transition: transform .15s, background .2s, box-shadow .15s; }
     .btn:hover { text-decoration: none; transform: translateY(-2px); }
@@ -234,10 +236,11 @@
         <span class="email">{higok18, kbkong}@pusan.ac.kr &middot; seungjun@sookmyung.ac.kr &middot; <sup>&dagger;</sup>Corresponding authors</span>
       </div>
 
+      <p class="lead-award">🏆 <b>1st place</b> on the
+        <a href="https://huggingface.co/spaces/nvidia/kvpress-leaderboard" target="_blank">KVPress Leaderboard</a></p>
       <div class="cta">
         <a class="btn btn-dark" href="https://arxiv.org/abs/2608.01247" target="_blank"><i class="fas fa-file-lines"></i> Paper</a>
         <a class="btn btn-dark" href="https://github.com/cvsp-lab/RestoreKV" target="_blank"><i class="fab fa-github"></i> Code</a>
-        <a class="btn" style="background:linear-gradient(135deg,#f6b93b,#e58e26); color:#fff; box-shadow:var(--shadow);" href="https://huggingface.co/spaces/nvidia/kvpress-leaderboard" target="_blank"><i class="fas fa-trophy"></i> KVPress Leaderboard&nbsp;·&nbsp;1st</a>
       </div>
 
       <figure class="fig reveal" style="max-width: 900px; margin: 30px auto 0;">
