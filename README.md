@@ -83,7 +83,8 @@ for the full inference implementation and arguments.
 
 ## 🙏 Acknowledgements
 
-RestoreKV builds on [KVzip](https://github.com/snu-mllab/KVzip) for query-agnostic context-reconstruction eviction,
-and its inference is implemented on top of [NVIDIA KVPress](https://github.com/NVIDIA/kvpress). RestoreKV is part of the
+RestoreKV builds on [KVzip](https://github.com/snu-mllab/KVzip) for query-agnostic context-reconstruction eviction —
+we thank the authors for their great work — and its inference is implemented on top of
+[NVIDIA KVPress](https://github.com/NVIDIA/kvpress). RestoreKV is part of the
 [BTS — Busan Token-pruning Series](https://higokri.github.io/BTS/) from the
 [PNU-CVSP](https://www.pnu-cvsp.com/) lab.
