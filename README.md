@@ -23,7 +23,7 @@
 ---
 
 <p align="center">
-  <img src="docs/static/images/teaser.png" alt="RestoreKV on the KVPress Benchmark (Qwen3-8B): RULER-4K accuracy vs. KV-cache compression, with near-zero added overhead" width="880">
+  <img src="docs/static/images/teaser.png" alt="RestoreKV on the KVPress Benchmark (Qwen3-8B): RULER-4K accuracy vs. KV-cache compression, with near-zero added overhead" width="620">
 </p>
 
 > **🏆 #1 on the [KVPress Leaderboard](https://huggingface.co/spaces/nvidia/kvpress-leaderboard)** — as of Oct 2026.
