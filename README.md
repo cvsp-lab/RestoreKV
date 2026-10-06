@@ -2,9 +2,7 @@
   <img src="assets/restorekv_logo.png" alt="RestoreKV" width="460">
 </p>
 
-<p align="center">
-  <b>RestoreKV: Recovering Full-Cache Behavior Under Aggressive Query-Agnostic KV Cache Eviction</b>
-</p>
+<h3 align="center">RestoreKV: Recovering Full-Cache Behavior Under Aggressive Query-Agnostic KV Cache Eviction</h3>
 
 <p align="center">
   <a href="https://sites.google.com/view/changwoobaek00/%ED%99%88">Changwoo Baek</a><sup>1</sup> &nbsp;·&nbsp;
