@@ -123,7 +123,6 @@ Only the training data is external:
 ```bash
 # download restorekv_train_data.zip from the Google Drive link above, then:
 unzip restorekv_train_data.zip                  # -> data/sft_data/*_train_mix.jsonl
-# (or: pip install gdown && gdown 1UUfIPS16YAqegaFAInRL6qeTuGxBWfDm)
 ```
 
 Evaluation datasets (QuALITY, QASPER, LongHealth) are bundled under `data/`; SCBench and
