@@ -53,7 +53,7 @@ RestoreKV runs **standalone in this repository** — no external framework requi
 `checkpoints/`:
 
 ```bash
-RESTORE_ATTN_MASK=0 KVZIP_EVAL_RATIOS="0.4,0.2,0.1,0.05" \
+KVZIP_EVAL_RATIOS="0.4,0.2,0.1,0.05" \
 python experiments/eval_learnable_restore.py \
   -m qwen3-4b -d longhealth --level pair --budget-mode budget-matched \
   --restore-checkpoint checkpoints/qwen3-4b_restorekv.pt --tag restorekv
@@ -126,7 +126,7 @@ full-KV teacher, KV keep-ratio sampled from U(0.025, 0.25).
 
 ```bash
 # RestoreKV (KVzip scoring); add KVZIP_PLUS=1 for RestoreKV+
-RESTORE_ATTN_MASK=0 python experiments/train_learnable_restore.py \
+python experiments/train_learnable_restore.py \
   -m qwen3-4b --data-source teacher-responses \
   --teacher-responses-path data/sft_data/qwen3-4b_train_mix.jsonl \
   --output-dir runs/restorekv_qwen3-4b \
@@ -140,7 +140,7 @@ RESTORE_ATTN_MASK=0 python experiments/train_learnable_restore.py \
 
 ```bash
 # RestoreKV: KVzip scoring + learned restoration (budget-matched)
-RESTORE_ATTN_MASK=0 KVZIP_EVAL_RATIOS="0.4,0.2,0.1,0.05" \
+KVZIP_EVAL_RATIOS="0.4,0.2,0.1,0.05" \
 python experiments/eval_learnable_restore.py \
   -m qwen3-4b -d longhealth --level pair --budget-mode budget-matched \
   --restore-checkpoint checkpoints/qwen3-4b_restorekv.pt --tag restorekv
