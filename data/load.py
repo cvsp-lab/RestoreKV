@@ -13,8 +13,9 @@ def load_dataset_all(name, tokenizer, n_data=100, split=None):
     (query-agnostic compression).
 
     Supported datasets: "quality", "qasper", "longhealth" (or "longhealthN"),
-    "scbench_*" (SCBench sub-tasks, incl. tiny/short/mid length tags),
-    "ruler_{4096,8192,16384}" (and ruler360/ruler1300 aliases).
+    "longbench:<task>" (LongBench tasks, e.g. "longbench:qasper" — the QASPER split
+    reported in the paper), "scbench_*" (SCBench sub-tasks, incl. tiny/short/mid
+    length tags), "ruler_{4096,8192,16384}" (and ruler360/ruler1300 aliases).
     """
     if name == "quality":
         dataset = load_quality(n_data)
@@ -34,6 +35,8 @@ def load_dataset_all(name, tokenizer, n_data=100, split=None):
         dataset = load_ruler(alias, 1300)
     elif name.startswith("ruler"):
         dataset = load_ruler(name, n_data)
+    elif name.startswith("longbench"):
+        dataset = load_longbench(name, n_data)
     else:
         raise ValueError(f"Invalid dataset: {name}")
 
@@ -396,3 +399,135 @@ def load_ruler(name, n_data=100):
             groups[ctx_key]["max_new_tokens"].append(int(mnt))
 
     return [groups[k] for k in order]
+
+
+_LONGBENCH_PROMPT_TAIL = {
+    "narrativeqa": (
+        "\n\nNow, answer the question based on the story asconcisely as you can, "
+        "using a single phrase if possible. Do not provide any explanation.\n\n"
+        "Question: {input}\n\nAnswer:"
+    ),
+    "qasper": (
+        "\n\nAnswer the question based on the above article as concisely as you can, "
+        "using a single phrase or sentence if possible. If the question cannot be answered "
+        "based on the information in the article, write \"unanswerable\". If the question "
+        "is a yes/no question, answer \"yes\", \"no\", or \"unanswerable\". Do not provide "
+        "any explanation.\n\nQuestion: {input}\n\nAnswer:"
+    ),
+    "multifieldqa_en": (
+        "\n\nNow, answer the following question based on the above text, only give me the "
+        "answer and do not output any other words.\n\nQuestion: {input}\nAnswer:"
+    ),
+    "hotpotqa": (
+        "\n\nAnswer the question based on the given passages. Only give me the answer and "
+        "do not output any other words.\n\nQuestion: {input}\nAnswer:"
+    ),
+    "2wikimqa": (
+        "\n\nAnswer the question based on the given passages. Only give me the answer and "
+        "do not output any other words.\n\nQuestion: {input}\nAnswer:"
+    ),
+    "musique": (
+        "\n\nAnswer the question based on the given passages. Only give me the answer and "
+        "do not output any other words.\n\nQuestion: {input}\nAnswer:"
+    ),
+    "gov_report": (
+        "\n\nNow, write a one-page summary of the report.\n\nSummary:"
+    ),
+    "qmsum": (
+        "\n\nNow, answer the query based on the above meeting transcript in one or more "
+        "sentences.\n\nQuery: {input}\nAnswer:"
+    ),
+    "multi_news": (
+        "\n\nNow, write a one-page summary of all news.\n\nSummary:"
+    ),
+    "trec": (
+        "\n\nPlease determine the type of the question below. Here are some examples of "
+        "questions.\n\n{input}"
+    ),
+    "triviaqa": (
+        "\n\nAnswer the question based on the given passage. Only give me the answer and "
+        "do not output any other words. The following are some examples.\n\n{input}"
+    ),
+    "samsum": (
+        "\n\nSummarize the dialogue into a few short sentences. The following are some "
+        "examples.\n\n{input}"
+    ),
+    "passage_count": (
+        "\n\nPlease enter the final count of unique paragraphs after removing duplicates. "
+        "The output should only contain the final count of unique paragraphs without any "
+        "additional explanation or text.\n\nThe final answer is: "
+    ),
+    "passage_retrieval_en": (
+        "\n\nThe following is an abstract.\n\n{input}\n\nPlease enter the number of the "
+        "paragraph that the abstract is from. The answer format must be like \"Paragraph "
+        "1\", \"Paragraph 2\", etc.\n\nThe answer is: "
+    ),
+    "lcc": (
+        # LongBench lcc: code is in context (input=""). Just ask for next line.
+        "\n\nPlease complete the code given below.\nNext line of code:"
+    ),
+    "repobench-p": (
+        "\n\nPlease complete the code given below.\n{input}Next line of code:"
+    ),
+}
+
+
+def load_longbench(name, n_data=100):
+    """LongBench (THUDM/LongBench): long-context benchmark with ~20 tasks.
+    Usage: name = 'longbench:<task>' where <task> is one of the LongBench task names.
+    Example: longbench:qasper, longbench:hotpotqa, longbench:multifieldqa_en
+    Uses task-specific prompts from LongBench standard (context stripped since it's in KV cache).
+    """
+    if ":" in name:
+        task = name.split(":", 1)[1]
+    else:
+        task = "qasper"
+
+    try:
+        raw = load_dataset("THUDM/LongBench", task, split="test", trust_remote_code=True)
+    except Exception:
+        try:
+            raw = load_dataset("THUDM/LongBench", task + "_e", split="test", trust_remote_code=True)
+        except Exception:
+            # datasets>=4 dropped script-based loading — fall back to local jsonl
+            # (extracted from the official data.zip; see docs/HW_ASSIGNMENT era notes)
+            _local = os.path.join(os.path.dirname(__file__), "longbench_local", "data", f"{task}.jsonl")
+            if not os.path.exists(_local):
+                raise
+            raw = [json.loads(l) for l in open(_local)]
+
+    prompt_tail = _LONGBENCH_PROMPT_TAIL.get(task, "\n\nQuestion: {input}\nAnswer:")
+
+    dataset = []
+    for row in raw:
+        ctx = row.get("context", "")
+        q_text = row.get("input", "")
+        answers = row.get("answers", [])
+        # Allow empty input for tasks whose prompt tail doesn't need it
+        # (summarization/passage_count/code: input="" is normal).
+        needs_input = "{input}" in prompt_tail
+        if not ctx or not answers:
+            continue
+        if needs_input and not q_text:
+            continue
+        if isinstance(answers, str):
+            answers = [answers]
+        refs = [str(a).strip() for a in answers if a]
+        if not refs:
+            continue
+
+        # Apply LongBench-standard prompt template
+        formatted_q = prompt_tail.format(input=q_text) if needs_input else prompt_tail
+
+        dataset.append({
+            "context": ctx,
+            "question": [formatted_q],
+            "answers": [" | ".join(refs)],
+            "answer_refs": [refs],
+            "task": task,
+            "longbench_prompt": True,   # marker to tell wrapper to bypass Q: prefix
+        })
+        if len(dataset) >= n_data:
+            break
+    return dataset
+

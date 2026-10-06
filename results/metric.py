@@ -291,6 +291,16 @@ def evaluate_answer(preds, refs, dataname, format, similarity=False, subtask=Non
                     score.append(qasper_score(pred, ref))
                     print("qasper_score..", end="\r")
 
+                elif dataname.startswith("longbench"):
+                    # LongBench QA (e.g. longbench:qasper): the stored gold is
+                    # "ref1 | ref2 | ..."; take max token-F1 over the refs.
+                    if isinstance(ref, str):
+                        refs = [r.strip() for r in ref.split(" | ")] if " | " in ref else [ref]
+                    else:
+                        refs = ref
+                    score.append(qasper_score(pred, refs))
+                    print("longbench_qa_f1..", end="\r")
+
                 else:
                     score.append(include_score(pred, ref))
                     print("include_score..", end="\r")

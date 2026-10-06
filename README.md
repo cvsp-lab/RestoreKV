@@ -183,9 +183,26 @@ python experiments/eval_learnable_restore.py \
 KVZIP_EVAL_RATIOS="0.4,0.2,0.1,0.05" python eval.py -m qwen3-4b -d longhealth --level pair --tag kvzip
 ```
 
-Swap `-d longhealth` for `quality` / `qasper`, or an `scbench_*` task / `ruler_{4096,8192,16384}`
-config. SCBench and RULER write per-sample generations to `results/` and are graded by the
-dedicated scorers (`results/parse_fix.py`, `scripts/score_ruler4k_kvpress.py`).
+Swap `-d longhealth` for `quality`, `longbench:qasper`, an `scbench_*` task, or a
+`ruler_{4096,8192,16384}` config. QuALITY and LongHealth (multiple choice) print accuracy inline.
+The generative tasks write per-sample generations to `results/` and are graded afterwards:
+
+```bash
+# QASPER — the paper uses the LongBench QASPER split (200 examples), scored by token-level F1
+KVZIP_EVAL_RATIOS="0.4,0.2,0.1,0.05" \
+python experiments/eval_learnable_restore.py \
+  -m qwen3-4b -d longbench:qasper --level pair --budget-mode budget-matched \
+  --restore-checkpoint checkpoints/qwen3-4b_restorekv.pt --tag restorekv --num 200
+python -m results.parse_fix -m qwen3-4b -d longbench:qasper --level pair --tag restorekv --num 200
+
+# RULER / SCBench use their dedicated scorers
+python scripts/score_ruler4k_kvpress.py -m qwen3-4b -t restorekv -d ruler_4096 -n 6500
+python -m results.parse_fix -m qwen3-4b -d scbench_qa_eng --tag restorekv
+```
+
+> **QASPER note.** Use `-d longbench:qasper` to reproduce the paper numbers. The bundled
+> `data/qasper-dev-v0.3.json` is the *original* QASPER dev set (281 full-text papers, used by
+> `-d qasper`) and is **not** the split reported in the paper.
 
 ## 📄 License
 
