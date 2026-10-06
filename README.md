@@ -1,4 +1,6 @@
-<h1 align="center">RestoreKV</h1>
+<p align="center">
+  <img src="assets/restorekv_logo.png" alt="RestoreKV" width="460">
+</p>
 
 <p align="center">
   <b>Recovering Full-Cache Behavior Under Aggressive Query-Agnostic KV Cache Eviction</b>
