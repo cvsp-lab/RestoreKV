@@ -85,8 +85,7 @@ models download from the Hugging Face Hub on first use; gated models (e.g.
 The restore adapters are **already included** in `checkpoints/` (6 adapters). To **train**, you also
 need the teacher-distilled data below; for **KVPress inference**, use the separate HF weights.
 
-<details>
-<summary>Checkpoint & data formats — the repo <code>.pt</code> and KVPress HF weights are <b>not interchangeable</b></summary>
+The repo `.pt` checkpoints and the KVPress HF weights are **not interchangeable**:
 
 | Asset | Format / used by | Contents | Link |
 |---|---|---|---|
@@ -94,11 +93,9 @@ need the teacher-distilled data below; for **KVPress inference**, use the separa
 | Training data | this repo (`--teacher-responses-path`) | `data/sft_data/*_train_mix.jsonl`, teacher-distilled triples (one file per model) | [Google Drive](https://drive.google.com/file/d/1UUfIPS16YAqegaFAInRL6qeTuGxBWfDm/view?usp=sharing) |
 | KVPress weights | **NVIDIA/KVPress** (`kvpress.RestoreKVPress`) | adapters in KVPress inference format | [🤗 HF collection](https://huggingface.co/collections/higokri/restorekv) |
 
-The Hugging Face weights are packaged for **KVPress inference** and will **not** load with this
-repository's training/eval code, and vice-versa. The `.pt` checkpoints shipped in `checkpoints/`
-are the ones to reproduce the paper's numbers with the code here.
-
-</details>
+> The Hugging Face weights are packaged for **KVPress inference** and will **not** load with this
+> repository's training/eval code, and vice-versa. The `.pt` checkpoints shipped in `checkpoints/`
+> are the ones to reproduce the paper's numbers with the code here.
 
 Only the training data is external:
 
