@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <b>Recovering Full-Cache Behavior Under Aggressive Query-Agnostic KV Cache Eviction</b>
+  <b>RestoreKV: Recovering Full-Cache Behavior Under Aggressive Query-Agnostic KV Cache Eviction</b>
 </p>
 
 <p align="center">
