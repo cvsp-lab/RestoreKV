@@ -40,20 +40,6 @@ the parameters and requiring no task-specific tuning.
 - Applied to KVzip+, reaches **86.4** RULER accuracy at **16×** compression on the KVPress Benchmark, while adding
   **<0.5%** one-time cache-construction overhead in a 32K-context evaluation.
 
-## 📊 Results
-
-RULER-4K accuracy on **Qwen3-4B** (base eviction = KVzip), budget-matched. The accuracy lost under
-aggressive eviction is almost fully recovered, and the gap widens as the budget shrinks:
-
-| KV budget | KVzip | **+ RestoreKV** |
-|:---:|:---:|:---:|
-| 20% | 91.4 | **93.5** |
-| 10% | 80.1 | **88.8** |
-| 5%  | 38.2 | **73.2** |
-
-See the [project page](https://paper.pnu-cvsp.com/RestoreKV/) for the full tables across five base
-methods and four datasets (RULER-4K, QASPER, QuALITY, LongHealth).
-
 ## 🔗 Resources
 
 | | |
