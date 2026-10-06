@@ -22,7 +22,11 @@
 
 ---
 
-> **🏆 #1 on the [KVPress Leaderboard](https://huggingface.co/spaces/nvidia/kvpress-leaderboard).**
+<p align="center">
+  <img src="docs/static/images/teaser.png" alt="RestoreKV on the KVPress Benchmark (Qwen3-8B): RULER-4K accuracy vs. KV-cache compression, with near-zero added overhead" width="880">
+</p>
+
+> **🏆 #1 on the [KVPress Leaderboard](https://huggingface.co/spaces/nvidia/kvpress-leaderboard)** — as of Oct 2026.
 
 **RestoreKV** complements selection-based query-agnostic KV cache eviction with **learned restoration** under
 the same total KV budget. After context prefill, a few restore tokens attend to the full KV cache in a single
@@ -36,6 +40,20 @@ the parameters and requiring no task-specific tuning.
 - Applied to KVzip+, reaches **86.4** RULER accuracy at **16×** compression on the KVPress Benchmark, while adding
   **<0.5%** one-time cache-construction overhead in a 32K-context evaluation.
 
+## 📊 Results
+
+RULER-4K accuracy on **Qwen3-4B** (base eviction = KVzip), budget-matched. The accuracy lost under
+aggressive eviction is almost fully recovered, and the gap widens as the budget shrinks:
+
+| KV budget | KVzip | **+ RestoreKV** |
+|:---:|:---:|:---:|
+| 20% | 91.4 | **93.5** |
+| 10% | 80.1 | **88.8** |
+| 5%  | 38.2 | **73.2** |
+
+See the [project page](https://paper.pnu-cvsp.com/RestoreKV/) for the full tables across five base
+methods and four datasets (RULER-4K, QASPER, QuALITY, LongHealth).
+
 ## 🔗 Resources
 
 | | |
@@ -44,7 +62,13 @@ the parameters and requiring no task-specific tuning.
 | 🌎 **Project page** | [paper.pnu-cvsp.com/RestoreKV](https://paper.pnu-cvsp.com/RestoreKV/) |
 | ⚙️ **Inference code** | [`restorekv_press.py` in NVIDIA/KVPress](https://github.com/NVIDIA/kvpress/blob/main/kvpress/presses/restorekv_press.py) |
 | 🤗 **Weights** | [huggingface.co/collections/higokri/restorekv](https://huggingface.co/collections/higokri/restorekv) |
-| 🏆 **Leaderboard** | [KVPress Leaderboard](https://huggingface.co/spaces/nvidia/kvpress-leaderboard) — **1st place** |
+| 🏆 **Leaderboard** | [KVPress Leaderboard](https://huggingface.co/spaces/nvidia/kvpress-leaderboard) — **1st place** (as of Oct 2026) |
+
+## 📰 News
+
+- **2026-10** — 🧑‍💻 Full training & evaluation code released in this repository.
+- **2026-09** — 🤗 Pretrained restore adapters released on Hugging Face; RestoreKV integrated into NVIDIA KVPress.
+- **2026-08** — 📄 Paper released on [arXiv](https://arxiv.org/abs/2608.01247).
 
 ## 🚀 Usage
 
@@ -62,6 +86,17 @@ press = RestoreKVPress(...)
 See [`restorekv_press.py`](https://github.com/NVIDIA/kvpress/blob/main/kvpress/presses/restorekv_press.py) for the full arguments.
 
 **2. Reproduce the paper** — run training & evaluation with the code in this repo; the restore adapters already ship in `checkpoints/`. See [Reproduce from this repository](#️-reproduce-from-this-repository).
+
+## 🧩 Supported models & adapters
+
+Pass the `-m` key and its matching `--restore-checkpoint`. RestoreKV+ uses the `*_plus.pt` adapter
+(add `KVZIP_PLUS=1`).
+
+| `-m` | Base model (Hugging Face) | RestoreKV | RestoreKV+ |
+|---|---|---|---|
+| `qwen3-4b` | [`Qwen/Qwen3-4B`](https://huggingface.co/Qwen/Qwen3-4B) | `checkpoints/qwen3-4b_restorekv.pt` | `checkpoints/qwen3-4b_restorekv_plus.pt` |
+| `qwen3-8b` | [`Qwen/Qwen3-8B`](https://huggingface.co/Qwen/Qwen3-8B) | `checkpoints/qwen3-8b_restorekv.pt` | `checkpoints/qwen3-8b_restorekv_plus.pt` |
+| `llama3.1-8b` | [`meta-llama/Llama-3.1-8B-Instruct`](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct) | `checkpoints/llama3.1-8b_restorekv.pt` | `checkpoints/llama3.1-8b_restorekv_plus.pt` |
 
 ## 🛠️ Reproduce from this repository
 
