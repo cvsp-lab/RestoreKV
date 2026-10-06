@@ -125,6 +125,30 @@ Only the training data is external:
 unzip restorekv_train_data.zip                  # -> data/sft_data/*_train_mix.jsonl
 ```
 
+<details>
+<summary><b>Or build the training mixture yourself</b></summary>
+
+The `*_train_mix.jsonl` mixture is a concatenation of three teacher-generated sources, all produced
+by the full-KV model (swap `--model` to match your target):
+
+```bash
+M=qwen3-4b
+# 1) self-study Q+A on LongAlpaca papers
+python experiments/generate_selfstudy.py --model $M \
+  --output data/sft_data/${M}_longalpaca.jsonl
+# 2) self-study Q+A on PG-19 book chunks
+python experiments/generate_pg19_chunk_selfstudy.py --model $M \
+  --output data/sft_data/${M}_pg19.jsonl
+# 3) teacher responses on the Tulu-3 flan_v2 subset
+python experiments/generate_teacher_responses.py --model $M --source-filter flan_v2 \
+  --output data/sft_data/${M}_flan.jsonl
+# concatenate into the training mix consumed by --teacher-responses-path
+cat data/sft_data/${M}_longalpaca.jsonl data/sft_data/${M}_pg19.jsonl \
+    data/sft_data/${M}_flan.jsonl > data/sft_data/${M}_train_mix.jsonl
+```
+
+</details>
+
 Evaluation datasets (QuALITY, QASPER, LongHealth) are bundled under `data/`; SCBench and
 RULER download from the Hub on first use.
 
