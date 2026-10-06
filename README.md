@@ -164,12 +164,6 @@ Swap `-d longhealth` for `quality` / `qasper`, or an `scbench_*` task / `ruler_{
 config. SCBench and RULER write per-sample generations to `results/` and are graded by the
 dedicated scorers (`results/parse_fix.py`, `scripts/score_ruler4k_kvpress.py`).
 
-## 🗺️ Release Plan
-
-- [x] Inference code (integrated into [NVIDIA/KVPress](https://github.com/NVIDIA/kvpress))
-- [x] Pretrained restore adapters ([Hugging Face](https://huggingface.co/collections/higokri/restorekv))
-- [x] Full training & evaluation code (this repository)
-
 ## 📄 License
 
 The code in this repository is released under the [MIT License](LICENSE), as it builds on
