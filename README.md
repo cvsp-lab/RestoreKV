@@ -48,23 +48,9 @@ the parameters and requiring no task-specific tuning.
 
 ## 🚀 Usage
 
-RestoreKV runs **standalone in this repository** — no external framework required. After
-[installation](#installation), evaluate any supported model with the restore adapters shipped in
-`checkpoints/`:
+There are two ways to run RestoreKV:
 
-```bash
-KVZIP_EVAL_RATIOS="0.4,0.2,0.1,0.05" \
-python experiments/eval_learnable_restore.py \
-  -m qwen3-4b -d longhealth --level pair --budget-mode budget-matched \
-  --restore-checkpoint checkpoints/qwen3-4b_restorekv.pt --tag restorekv
-```
-
-This is the reference implementation used for the paper; see
-[Reproduce from this repository](#️-reproduce-from-this-repository) for full training/evaluation usage.
-
-RestoreKV is **also integrated into [NVIDIA KVPress](https://github.com/NVIDIA/kvpress)** as
-`RestoreKVPress` for drop-in inference in that framework, with adapters on the
-[🤗 Hugging Face collection](https://huggingface.co/collections/higokri/restorekv):
+**1. Drop-in inference** — use `RestoreKVPress` in [NVIDIA KVPress](https://github.com/NVIDIA/kvpress) with the adapters on the [🤗 Hugging Face collection](https://huggingface.co/collections/higokri/restorekv):
 
 ```python
 from kvpress import RestoreKVPress
@@ -73,8 +59,9 @@ from kvpress import RestoreKVPress
 press = RestoreKVPress(...)
 ```
 
-See [`kvpress/presses/restorekv_press.py`](https://github.com/NVIDIA/kvpress/blob/main/kvpress/presses/restorekv_press.py)
-for the KVPress inference implementation and arguments.
+See [`restorekv_press.py`](https://github.com/NVIDIA/kvpress/blob/main/kvpress/presses/restorekv_press.py) for the full arguments.
+
+**2. Reproduce the paper** — run training & evaluation with the code in this repo; the restore adapters already ship in `checkpoints/`. See [Reproduce from this repository](#️-reproduce-from-this-repository).
 
 ## 🛠️ Reproduce from this repository
 
@@ -95,7 +82,11 @@ models download from the Hugging Face Hub on first use; gated models (e.g.
 
 ### Assets (weights & training data)
 
-There are **two different checkpoint formats**, and they are **not interchangeable**:
+The restore adapters are **already included** in `checkpoints/` (6 adapters). To **train**, you also
+need the teacher-distilled data below; for **KVPress inference**, use the separate HF weights.
+
+<details>
+<summary>Checkpoint & data formats — the repo <code>.pt</code> and KVPress HF weights are <b>not interchangeable</b></summary>
 
 | Asset | Format / used by | Contents | Link |
 |---|---|---|---|
@@ -103,11 +94,13 @@ There are **two different checkpoint formats**, and they are **not interchangeab
 | Training data | this repo (`--teacher-responses-path`) | `data/sft_data/*_train_mix.jsonl`, teacher-distilled triples (one file per model) | [Google Drive](https://drive.google.com/file/d/1UUfIPS16YAqegaFAInRL6qeTuGxBWfDm/view?usp=sharing) |
 | KVPress weights | **NVIDIA/KVPress** (`kvpress.RestoreKVPress`) | adapters in KVPress inference format | [🤗 HF collection](https://huggingface.co/collections/higokri/restorekv) |
 
-> The Hugging Face weights are packaged for **KVPress inference** and will **not** load with this
-> repository's training/eval code, and vice-versa. The `.pt` checkpoints shipped in `checkpoints/`
-> are the ones to use to reproduce the paper's numbers with the code here.
+The Hugging Face weights are packaged for **KVPress inference** and will **not** load with this
+repository's training/eval code, and vice-versa. The `.pt` checkpoints shipped in `checkpoints/`
+are the ones to reproduce the paper's numbers with the code here.
 
-The restore checkpoints are already in `checkpoints/`; only the training data is external:
+</details>
+
+Only the training data is external:
 
 ```bash
 # download restorekv_train_data.zip from the Google Drive link above, then:
@@ -165,6 +158,9 @@ The code in this repository is released under the [MIT License](LICENSE), as it 
 [KVzip](https://github.com/snu-mllab/KVzip) (MIT, © snu-mllab); the KV-cache gather kernel adapts
 [AdaKV](https://github.com/FFY0/AdaKV).
 
+<details>
+<summary>Data licenses (training mixtures & bundled eval sets — research / non-commercial, separate from the code license)</summary>
+
 The **training-data mixtures are for research / non-commercial use only.** Because the mixture
 contains LongAlpaca-derived self-study data, it inherits the most restrictive component license,
 **CC BY-NC 4.0**. Components: [LongAlpaca-12k](https://huggingface.co/datasets/Yukang/LongAlpaca-12k)
@@ -175,6 +171,8 @@ and the `flan_v2` subset of [Tulu-3](https://huggingface.co/datasets/allenai/tul
 [QASPER](https://huggingface.co/datasets/allenai/qasper) (CC BY 4.0), and
 [LongHealth](https://github.com/kbressem/LongHealth) (Apache-2.0). These data terms are separate
 from and additional to the code license.
+
+</details>
 
 ## 📚 Citation
 
